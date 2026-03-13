@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLSI Simulation Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0b1629;--navy2:#112040;--navy3:#1a3060;
+  --blue:#2563eb;--blue2:#3b82f6;
+  --gold:#f59e0b;--green:#10b981;--red:#ef4444;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --border:rgba(255,255,255,0.08);--card:rgba(255,255,255,0.04);--card2:rgba(255,255,255,0.07);
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(37,99,235,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.05) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+header{position:relative;z-index:10;padding:1.4rem 2rem 0;border-bottom:1px solid var(--border)}
+.hdr{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding-bottom:1.2rem;gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:11px}
+.chip{width:32px;height:32px;background:var(--blue);border-radius:6px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;padding:6px;flex-shrink:0}
+.chip span{background:rgba(255,255,255,0.75);border-radius:1px}
+.lt{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:2px}
+.ls{font-size:11px;color:var(--text3);letter-spacing:1px;margin-top:1px}
+.badge{background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.3);color:var(--blue2);font-size:10px;font-family:var(--mono);padding:4px 10px;border-radius:4px;letter-spacing:1px}
+.tabs{display:flex;max-width:1200px;margin:0 auto;overflow-x:auto}
+.tab{flex:1;min-width:100px;padding:12px 8px;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;text-align:center;transition:all 0.2s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text);background:rgba(255,255,255,0.02)}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.tab .n{display:block;font-size:18px;font-weight:700;margin-bottom:2px;color:inherit}
+
+main{position:relative;z-index:5;max-width:1200px;margin:0 auto;padding:1.75rem 2rem 3rem}
+.panel{display:none;animation:fi 0.25s ease}.panel.on{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.ph{margin-bottom:1.4rem}
+.pt{font-size:22px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:9px;font-weight:400;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:var(--gold);padding:3px 8px;border-radius:4px;letter-spacing:1px}
+.pd{font-size:13px;color:var(--text2);max-width:660px;line-height:1.7}
+
+.g2{display:grid;grid-template-columns:1.15fr 0.85fr;gap:1.4rem;align-items:start}
+@media(max-width:780px){.g2{grid-template-columns:1fr}}
+
+.cvw{position:relative;background:var(--navy2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cvl{font-family:var(--mono);font-size:9px;color:var(--text3);padding:8px 12px 0;letter-spacing:1px;text-transform:uppercase}
+canvas{display:block;width:100%;cursor:crosshair}
+.cvb{padding:10px 12px 12px;display:flex;gap:7px;flex-wrap:wrap}
+
+.btn{padding:7px 15px;border-radius:6px;font-size:12px;font-family:var(--sans);cursor:pointer;transition:all 0.15s;border:1px solid var(--border);background:var(--card);color:var(--text)}
+.btn:hover{background:var(--card2);border-color:rgba(255,255,255,0.18)}
+.btn.bp{background:rgba(37,99,235,0.16);border-color:rgba(37,99,235,0.42);color:var(--blue2)}
+.btn.bp:hover{background:rgba(37,99,235,0.28)}
+.btn.bg{background:rgba(245,158,11,0.13);border-color:rgba(245,158,11,0.38);color:var(--gold)}
+.btn.bg:hover{background:rgba(245,158,11,0.22)}
+.btn.brd{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.35);color:var(--red)}
+.btn:disabled{opacity:0.35;cursor:not-allowed;pointer-events:none}
+
+.side{display:flex;flex-direction:column;gap:0.9rem}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;text-align:center}
+.sv{font-family:var(--mono);font-size:20px;font-weight:700}
+.sl{font-size:11px;color:var(--text3);margin-top:3px}
+.bl{color:var(--blue2)}.gd{color:var(--gold)}.gr{color:var(--green)}.rd{color:var(--red)}
+
+.fbox{background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;padding:0.65rem 0.9rem;font-family:var(--mono);font-size:12px;color:var(--blue2);text-align:center;letter-spacing:0.3px}
+.icard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.85rem 1rem;font-size:13px;color:var(--text2);line-height:1.75}
+.icard b{color:var(--text);font-weight:500}
+.icard .hl{color:var(--gold);font-weight:500}
+
+.slog{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.8rem;font-size:11px;font-family:var(--mono);max-height:145px;overflow-y:auto}
+.le{padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text2)}
+.le:last-child{border:none;color:var(--text)}
+.le.ok{color:var(--green)}.le.no{color:var(--red)}
+
+.leg{display:flex;gap:12px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ls2{width:13px;height:9px;border-radius:2px;flex-shrink:0}
+
+.sr{display:flex;align-items:center;gap:10px}
+.sr label{font-size:12px;color:var(--text2);min-width:80px}
+.sr span{font-family:var(--mono);font-size:12px;color:var(--gold);min-width:40px}
+input[type=range]{flex:1;accent-color:var(--blue)}
+
+.tbar-lbl{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:3px;display:flex;justify-content:space-between}
+.tbar-bg{height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden}
+.tbar-fill{height:100%;border-radius:3px;transition:width 0.1s,background 0.35s}
+
+/* ── Steiner step progress ── */
+.step-progress{display:flex;gap:5px;margin-bottom:0.6rem}
+.sp{flex:1;height:3px;border-radius:2px;background:var(--border);transition:all 0.3s}
+.sp.done{background:var(--green)}
+.sp.active{background:var(--gold)}
+.step-phase{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:0.75rem}
+
+/* comparison reveal */
+.cmp-box{background:var(--navy);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.cmp-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border)}
+.cmp-row:last-child{border:none}
+.cmp-label{font-size:12px;color:var(--text2)}
+.cmp-val{font-family:var(--mono);font-size:13px;font-weight:700}
+.arrow-down{text-align:center;padding:4px;font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* ── DETAIL SECTION ── */
+.detail{margin-top:2.5rem;border-top:1px solid var(--border);padding-top:2rem}
+.detail-head{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.25rem}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}
+.dc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem}
+.dc-title{font-size:13px;font-weight:600;margin-bottom:0.5rem;display:flex;align-items:center;gap:8px}
+.dc-num{font-family:var(--mono);font-size:10px;background:rgba(37,99,235,0.18);color:var(--blue2);border-radius:4px;padding:2px 7px}
+.dc p{font-size:12px;color:var(--text2);line-height:1.8}
+.dc code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--gold)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <div class="logo">
+      <div class="chip"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div><div class="lt">VLSI Sim Suite</div><div class="ls">Interactive Learning Tool</div></div>
+    </div>
+    <div class="badge">5 SIMULATIONS</div>
+  </div>
+  <div class="tabs">
+    <div class="tab on"  onclick="go(0)"><span class="n">01</span>HPWL</div>
+    <div class="tab"     onclick="go(1)"><span class="n">02</span>Steiner</div>
+    <div class="tab"     onclick="go(2)"><span class="n">03</span>Kruskal</div>
+    <div class="tab"     onclick="go(3)"><span class="n">04</span>Sim. Annealing</div>
+    <div class="tab"     onclick="go(4)"><span class="n">05</span>Heatmap</div>
+  </div>
+</header>
+
+<main>
+
+<!-- ══ P1 HPWL ══════════════════════════════════════ -->
+<div class="panel on" id="p0">
+  <div class="ph">
+    <div class="pt">HPWL Calculator <span class="tag">WIRE LENGTH</span></div>
+    <div class="pd">Click anywhere on the canvas to place components. The bounding box and HPWL update live after every point.</div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="cvw">
+        <div class="cvl" id="h-cvl">chip canvas — click to place components</div>
+        <canvas id="cv0" height="360"></canvas>
+        <div class="cvb">
+          <button class="btn bp" onclick="H.clear()">Clear all</button>
+          <button class="btn" onclick="H.rand()">Add random</button>
+          <button class="btn" onclick="H.demo()">Load demo</button>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="fbox">HPWL = (MaxX − MinX) + (MaxY − MinY)</div>
+      <div class="stats">
+        <div class="stat"><div class="sv" id="h-n">0</div><div class="sl">components</div></div>
+        <div class="stat"><div class="sv bl" id="h-hpwl">—</div><div class="sl">HPWL</div></div>
+        <div class="stat"><div class="sv" id="h-w">—</div><div class="sl">width</div></div>
+        <div class="stat"><div class="sv" id="h-ht">—</div><div class="sl">height</div></div>
+      </div>
+      <div class="icard">
+        <b>How it works:</b> Finds the smallest axis-aligned rectangle that wraps all components. HPWL = width + height of that box.<br><br>
+        <b>Why it's used:</b> Computes instantly in O(n) time — a fast first estimate before running the heavier RSMT model.<br><br>
+        <b class="hl">Limitation:</b> Always underestimates real wire length because actual wires share Steiner junctions and route around obstacles.
+      </div>
+      <div class="leg">
+        <div class="li"><div class="ld" style="background:var(--blue2)"></div>component</div>
+        <div class="li"><div class="ls2" style="background:rgba(37,99,235,0.12);border:1px dashed rgba(37,99,235,0.5)"></div>bounding box</div>
+      </div>
+    </div>
+  </div>
+  <div class="detail">
+    <div class="detail-head">// deep dive — HPWL in this paper</div>
+    <div class="detail-grid">
+      <div class="dc"><div class="dc-title"><span class="dc-num">01</span>What is HPWL?</div><p>Half-Perimeter Wire Length is the simplest wire estimation in EDA. Given a group of pins, it computes half the perimeter of the smallest bounding rectangle. No routing needed — just find <code>MinX</code>, <code>MaxX</code>, <code>MinY</code>, <code>MaxY</code>.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">02</span>Why the paper uses it</div><p>213 groups of components need fast evaluation. HPWL gives an instant estimate for all simultaneously before RSMT. It also drives the <b>Problem 2</b> objective function (grid density) where speed matters more than precision.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">03</span>The formula</div><p>For points <code>(x₁,y₁)…(xₙ,yₙ)</code>:<br><br><code>HPWL = (max(xᵢ)−min(xᵢ)) + (max(yᵢ)−min(yᵢ))</code><br><br>Exactly half the bounding rectangle's full perimeter — hence the name.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">04</span>HPWL vs RSMT</div><p>HPWL always underestimates. RSMT (with Steiner points) is more accurate but slower. For 2-pin groups they are equal. For 3+ pins the gap grows. The paper uses both: HPWL for speed in SA, RSMT for final accuracy scoring.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ P2 STEINER ════════════════════════════════════ -->
+<div class="panel" id="p1">
+  <div class="ph">
+    <div class="pt">Steiner Points <span class="tag">WIRE REDUCTION</span></div>
+    <div class="pd">Follow the steps: place 3 component points, see the direct wiring cost, then add a Steiner point and compare the difference.</div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="cvw">
+        <div class="cvl" id="st-cvl">step 1 of 4 — click to place component A</div>
+        <canvas id="cv1" height="380" style="cursor:crosshair"></canvas>
+        <div class="cvb">
+          <button class="btn bp" id="st-action-btn" onclick="ST.action()" disabled>waiting for points…</button>
+          <button class="btn" onclick="ST.restart()">↺ Restart</button>
+          <button class="btn bg" onclick="ST.autoDemo()">Auto demo</button>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="step-phase" id="st-phase-lbl">PHASE 1 — PLACE COMPONENTS</div>
+      <div class="step-progress">
+        <div class="sp active" id="sp0"></div>
+        <div class="sp" id="sp1"></div>
+        <div class="sp" id="sp2"></div>
+        <div class="sp" id="sp3"></div>
+      </div>
+
+      <!-- Before: direct wiring -->
+      <div id="st-before-wrap">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:6px">DIRECT WIRING (no Steiner)</div>
+        <div class="stats">
+          <div class="stat"><div class="sv" id="s-na">—</div><div class="sl">nodes</div></div>
+          <div class="stat"><div class="sv rd" id="s-dir">—</div><div class="sl">total wire</div></div>
+        </div>
+      </div>
+
+      <!-- After: Steiner comparison (hidden until step 4) -->
+      <div id="st-after-wrap" style="display:none">
+        <div class="arrow-down">▼ adding Steiner point S ▼</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:6px">WITH STEINER POINT S</div>
+        <div class="cmp-box">
+          <div class="cmp-row"><span class="cmp-label">Direct MST (A+B+C)</span><span class="cmp-val rd" id="ct-dir">—</span></div>
+          <div class="cmp-row"><span class="cmp-label">Through Steiner S</span><span class="cmp-val gr" id="ct-st">—</span></div>
+          <div class="cmp-row" style="background:rgba(16,185,129,0.07)"><span class="cmp-label" style="color:var(--green)">Wire saved</span><span class="cmp-val gr" id="ct-sv">—</span></div>
+          <div class="cmp-row" style="background:rgba(16,185,129,0.07)"><span class="cmp-label" style="color:var(--green)">% reduction</span><span class="cmp-val gd" id="ct-pct">—</span></div>
+        </div>
+      </div>
+
+      <div class="icard" id="st-hint">
+        <b>Step 1:</b> Click anywhere on the canvas to place component <b>A</b> — the first connection interface.
+      </div>
+    </div>
+  </div>
+  <div class="detail">
+    <div class="detail-head">// deep dive — steiner points in VLSI routing</div>
+    <div class="detail-grid">
+      <div class="dc"><div class="dc-title"><span class="dc-num">01</span>What is a Steiner point?</div><p>A virtual branching node — not a real component — added purely to shorten total wire length. Named after mathematician Jakob Steiner. These junction points let wires share paths rather than running independently to each pin.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">02</span>Why not connect directly?</div><p>Direct connections waste wire. If A, B, and C share a nearby region, routing through a central point S means portions of wire are shared. Even one Steiner point can cut total wire 10–25%. In the paper it's applied across all 213 groups.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">03</span>Why rectilinear (RSMT)?</div><p>Real chip wires can only travel horizontally or vertically — no diagonals. So <code>Manhattan distance |Δx|+|Δy|</code> is used. The resulting tree is a <code>Rectilinear Steiner Minimum Tree (RSMT)</code>, not a Euclidean one.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">04</span>How the paper applies it</div><p>Steiner points are added iteratively to each of the 213 groups. Then <code>Kruskal's algorithm</code> builds the MST on the expanded point set. The result is compared to Grey Relational reference data to produce a quality score from 0 to 1.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ P3 KRUSKAL ════════════════════════════════════ -->
+<div class="panel" id="p2">
+  <div class="ph">
+    <div class="pt">Kruskal's Algorithm <span class="tag">MST CONSTRUCTION</span></div>
+    <div class="pd">Step through MST construction. Edges sorted shortest-first. Green = added to tree, red = rejected (would form a loop).</div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="cvw">
+        <div class="cvl">mst construction — step by step</div>
+        <canvas id="cv2" height="360" style="cursor:default"></canvas>
+        <div class="cvb">
+          <button class="btn bp" onclick="K.next()">Next step →</button>
+          <button class="btn" id="kr-ab" onclick="K.auto()">Auto play</button>
+          <button class="btn" onclick="K.reset()">New graph</button>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="stats">
+        <div class="stat"><div class="sv" id="k-step">0</div><div class="sl">step</div></div>
+        <div class="stat"><div class="sv bl" id="k-tot">—</div><div class="sl">total edges</div></div>
+        <div class="stat"><div class="sv gr" id="k-add">0</div><div class="sl">added</div></div>
+        <div class="stat"><div class="sv rd" id="k-rej">0</div><div class="sl">rejected</div></div>
+      </div>
+      <div class="stat"><div class="sv bl" id="k-len" style="font-size:26px">—</div><div class="sl">MST total length</div></div>
+      <div class="slog" id="k-log"><div class="le">Press "Next step" to begin</div></div>
+      <div class="leg">
+        <div class="li"><div class="ld" style="background:var(--gold)"></div>current candidate</div>
+        <div class="li"><div class="ld" style="background:var(--green)"></div>added to MST</div>
+        <div class="li"><div class="ld" style="background:var(--red)"></div>rejected (loop)</div>
+      </div>
+      <div class="icard"><b>Key rule:</b> Always add the shortest edge that does NOT create a cycle. Stop when all N nodes connected with N−1 edges. Guaranteed to be the Minimum Spanning Tree.</div>
+    </div>
+  </div>
+  <div class="detail">
+    <div class="detail-head">// deep dive — kruskal's algorithm</div>
+    <div class="detail-grid">
+      <div class="dc"><div class="dc-title"><span class="dc-num">01</span>What is a Minimum Spanning Tree?</div><p>A Spanning Tree connects all N nodes using exactly N−1 edges with no cycles. The MST minimises the total edge weight — in VLSI this means the minimum total wire needed to connect all pins in a group.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">02</span>Algorithm steps</div><p>1. Sort all edges by length (shortest first).<br>2. For each edge: if it connects two separate components → <span style="color:var(--green)">add it</span>.<br>3. If both nodes already connected → <span style="color:var(--red)">reject (loop)</span>.<br>4. Stop when N−1 edges added.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">03</span>Union-Find structure</div><p>To detect loops instantly, Kruskal's uses a <code>Union-Find</code> (Disjoint Set) structure. Each node starts in its own set. Adding an edge merges two sets. If both nodes are already in the same set → loop detected → reject.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">04</span>Role in the paper's RSMT</div><p>After Steiner points are added to a group, Kruskal's runs on the expanded set (real components + virtual Steiner helpers). The MST produced — using only horizontal/vertical edges — is the RSMT. Its quality is scored via <code>Grey Relational Analysis</code>.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ P4 SIMULATED ANNEALING ══════════════════════ -->
+<div class="panel" id="p3">
+  <div class="ph">
+    <div class="pt">Simulated Annealing <span class="tag">PLACEMENT OPTIMISATION</span></div>
+    <div class="pd">Components start clustered at center. Watch them migrate as temperature cools. Red cells exceed the 90% density limit.</div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="cvw">
+        <div class="cvl">chip grid — 8×6 cells — density limit 90%</div>
+        <canvas id="cv3" height="360" style="cursor:default"></canvas>
+        <div style="padding:0 12px 4px">
+          <div class="tbar-lbl"><span>temperature</span><span id="sa-tl">T = 100.0</span></div>
+          <div class="tbar-bg"><div class="tbar-fill" id="sa-bar" style="width:100%;background:var(--red)"></div></div>
+        </div>
+        <div class="cvb">
+          <button class="btn bp" id="sa-btn" onclick="SA.toggle()">▶ Start annealing</button>
+          <button class="btn" onclick="SA.reset()">Reset</button>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="stats">
+        <div class="stat"><div class="sv rd" id="sa-t">100</div><div class="sl">temperature T</div></div>
+        <div class="stat"><div class="sv" id="sa-i">0</div><div class="sl">iterations</div></div>
+        <div class="stat"><div class="sv bl" id="sa-w">—</div><div class="sl">wire length</div></div>
+        <div class="stat"><div class="sv gd" id="sa-p">—</div><div class="sl">accept prob P</div></div>
+      </div>
+      <div class="sr">
+        <label>Cooling α</label>
+        <input type="range" min="970" max="999" step="1" value="992" id="sa-sl" oninput="SA.setA()">
+        <span id="sa-av">0.992</span>
+      </div>
+      <div class="leg">
+        <div class="li"><div class="ls2" style="background:rgba(37,99,235,0.2)"></div>normal density</div>
+        <div class="li"><div class="ls2" style="background:rgba(239,68,68,0.45)"></div>overcrowded &gt;90%</div>
+      </div>
+      <div class="icard">
+        <b>Hot phase:</b> Large random moves, often accepts worse solutions — broad exploration.<br><br>
+        <b>Cooling:</b> Move size shrinks. P = e<sup>−Δf/T</sup> falls — more selective.<br><br>
+        <b>Cold phase:</b> Only improvements accepted — converges to best layout.<br><br>
+        <b class="hl">Try it:</b> Set α = 0.999 (slow cool) vs 0.970 (fast) and compare results!
+      </div>
+    </div>
+  </div>
+  <div class="detail">
+    <div class="detail-head">// deep dive — simulated annealing for VLSI placement</div>
+    <div class="detail-grid">
+      <div class="dc"><div class="dc-title"><span class="dc-num">01</span>What is Simulated Annealing?</div><p>SA is a probabilistic optimisation algorithm inspired by metallurgical annealing — heating metal then cooling slowly so atoms settle into a low-energy state. Used for NP-Hard problems like VLSI placement where exhaustive search is impossible.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">02</span>Why accept worse solutions?</div><p>Always moving to a better state leads to <code>local optima</code> — solutions that look best nearby but aren't globally optimal. Accepting worse solutions with probability <code>P = e^(−Δf/T)</code> lets the algorithm escape traps. High T = escape often. Low T = almost never.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">03</span>Paper's exact parameters</div><p>Initial temperature: <code>T = 100</code><br>Cooling rate: <code>α = 0.992</code><br>Outer iterations: <code>M = 100</code><br>Inner steps per T: <code>LK = 500</code><br>Move type: <code>SHIFT</code> operation<br>Density constraint: <code>S_mn/(595×630) ≤ 0.9</code></p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">04</span>Known limitation</div><p>Some component overlap remains in the final layout. The objective function minimises wire length — which pulls components together — conflicting with the density constraint. SA balances both goals but cannot perfectly satisfy them simultaneously. This is an inherent trade-off acknowledged by the paper.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ P5 HEATMAP ═════════════════════════════════= -->
+<div class="panel" id="p4">
+  <div class="ph">
+    <div class="pt">Wiring Density Heatmap <span class="tag">ROUTING DENSITY</span></div>
+    <div class="pd">Click to place wire groups or use the preset buttons. Hotter colours = more wires passing through that grid cell.</div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="cvw">
+        <div class="cvl">wiring density — click to add groups</div>
+        <canvas id="cv4" height="360"></canvas>
+        <div class="cvb">
+          <button class="btn bp" onclick="HM.random()">Random layout</button>
+          <button class="btn bg" onclick="HM.center()">Center-clustered</button>
+          <button class="btn brd" onclick="HM.clear()">Clear</button>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="fbox">ρ_mn = Σ gρᵢ × S′_mn</div>
+      <div class="stats">
+        <div class="stat"><div class="sv" id="hm-g">0</div><div class="sl">groups</div></div>
+        <div class="stat"><div class="sv rd" id="hm-mx">—</div><div class="sl">max density</div></div>
+        <div class="stat"><div class="sv bl" id="hm-av">—</div><div class="sl">avg density</div></div>
+        <div class="stat"><div class="sv gd" id="hm-hc">—</div><div class="sl">hottest cell</div></div>
+      </div>
+      <div class="leg">
+        <div class="li"><div class="ls2" style="background:rgba(27,58,107,0.4)"></div>low</div>
+        <div class="li"><div class="ls2" style="background:rgba(37,99,235,0.6)"></div>medium</div>
+        <div class="li"><div class="ls2" style="background:rgba(245,158,11,0.8)"></div>high</div>
+        <div class="li"><div class="ls2" style="background:rgba(239,68,68,0.9)"></div>very high</div>
+      </div>
+      <div class="icard">
+        <b>gρᵢ</b> = (wire length × width) ÷ bounding box area<br>
+        <b>S′mn</b> = overlap of group i's bbox with cell [m,n]<br><br>
+        <b class="hl">Key result:</b> Try "Center-clustered" — center glows hottest, matching the paper's exact heatmap. SA (Panel 4) pulls components to center → more wires there.<br><br>
+        <b>Scale:</b> Paper uses 213 groups × 3,840 cells = 817,920 calculations in MATLAB.
+      </div>
+    </div>
+  </div>
+  <div class="detail">
+    <div class="detail-head">// deep dive — grid wiring density model</div>
+    <div class="detail-grid">
+      <div class="dc"><div class="dc-title"><span class="dc-num">01</span>Grid density vs wiring density</div><p><code>Grid density</code> (Panel 4) measures component crowding — is there physical space? <code>Wiring density</code> (this panel) measures wire crowding — can all signals fit through? Both are required for a manufacturable chip layout.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">02</span>Two-level calculation</div><p><b>Level 1 — per group:</b><br><code>gρᵢ = (Lᵢ × WIDᵢ) / (Hᵢ × Wᵢ)</code><br>Wire area as fraction of bounding box.<br><br><b>Level 2 — per cell:</b><br><code>ρ_mn = Σ gρᵢ × S′mn</code><br>Sum over all groups overlapping cell [m,n].</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">03</span>Three problems the paper fixes</div><p><b>Wire width varies</b> → standardise to uniform width.<br><br><b>Multi-layer chips</b> → minimise layers (acknowledged limitation).<br><br><b>Empty bounding box areas</b> → the group-level formula weights only the wired region correctly.</p></div>
+      <div class="dc"><div class="dc-title"><span class="dc-num">04</span>Why center is always hottest</div><p>SA (Problem 2) minimises wire length by pulling components toward the center. So most groups have bounding boxes centered on the chip. This concentrates wiring density there — producing the characteristic hot-center heatmap that matches the paper's actual MATLAB output.</p></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const md=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const rnd=n=>Math.round(n);
+
+function go(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('on',i===j));
+  [H,ST,K,SA,HM][i]?.draw?.();
+}
+
+function initCanvas(id,h){
+  const cv=$(id);cv.height=h||360;cv.width=cv.offsetWidth||520;
+  return{cv,ctx:cv.getContext('2d'),W:cv.width,H:cv.height};
+}
+function BG(ctx,W,H){
+  ctx.fillStyle='#112040';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(37,99,235,0.055)';ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+}
+function node(ctx,x,y,label,color,r=11){
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font="bold 11px 'Space Mono',monospace";
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x,y);
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+}
+function evPt(cv,e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+function tPt(cv,e){const r=cv.getBoundingClientRect(),t=e.touches[0];return{x:t.clientX-r.left,y:t.clientY-r.top};}
+
+// ══════════════════════════════════════
+// SIM 1 — HPWL
+// ══════════════════════════════════════
+const H=(()=>{
+  let{cv,ctx,W,H:H_}=initCanvas('cv0');let pts=[];
+  cv.addEventListener('click',e=>{pts.push(evPt(cv,e));draw();});
+  function draw(){
+    W=cv.offsetWidth;cv.width=W;BG(ctx,W,H_);
+    if(pts.length>=2){
+      const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+      const x0=Math.min(...xs),y0=Math.min(...ys),x1=Math.max(...xs),y1=Math.max(...ys);
+      ctx.fillStyle='rgba(37,99,235,0.07)';ctx.fillRect(x0,y0,x1-x0,y1-y0);
+      ctx.strokeStyle='#3b82f6';ctx.lineWidth=1.5;ctx.setLineDash([7,5]);
+      ctx.strokeRect(x0,y0,x1-x0,y1-y0);ctx.setLineDash([]);
+      ctx.fillStyle='#3b82f6';ctx.font="11px 'Space Mono',monospace";
+      ctx.textAlign='center';ctx.fillText('W='+rnd(x1-x0),(x0+x1)/2,y1+18);
+      ctx.save();ctx.translate(x1+20,y0+(y1-y0)/2);ctx.rotate(Math.PI/2);ctx.fillText('H='+rnd(y1-y0),0,0);ctx.restore();ctx.textAlign='left';
+      $('h-w').textContent=rnd(x1-x0);$('h-ht').textContent=rnd(y1-y0);$('h-hpwl').textContent=rnd(x1-x0+y1-y0);
+    }else{$('h-w').textContent='—';$('h-ht').textContent='—';$('h-hpwl').textContent='—';}
+    pts.forEach((p,i)=>node(ctx,p.x,p.y,i+1,'#2563eb'));
+    $('h-n').textContent=pts.length;
+  }
+  draw();
+  return{draw,clear(){pts=[];draw();},rand(){pts.push({x:30+Math.random()*(W-60),y:30+Math.random()*(H_-60)});draw();},demo(){pts=[{x:.22*W,y:.7*H_},{x:.78*W,y:.2*H_},{x:.55*W,y:.8*H_},{x:.15*W,y:.35*H_},{x:.88*W,y:.6*H_}];draw();}};
+})();
+
+// ══════════════════════════════════════
+// SIM 2 — STEINER (step-by-step)
+// ══════════════════════════════════════
+const ST=(()=>{
+  let{cv,ctx,W,H:H_}=initCanvas('cv1',380);
+  // phase: 0=place A, 1=place B, 2=place C, 3=ready (show direct), 4=place/drag S, 5=done
+  let phase=0,pts=[],sPt=null,dragging=false,demoTimer=null;
+  const LABELS=['A','B','C'];
+
+  const HINTS=[
+    '<b>Step 1 of 4:</b> Click anywhere on the canvas to place component <b>A</b> — the first connection interface.',
+    '<b>Step 2 of 4:</b> Click to place component <b>B</b> — the second connection interface.',
+    '<b>Step 3 of 4:</b> Click to place component <b>C</b> — the third connection interface.',
+    '<b>Step 3 complete!</b> This is the <b class="rd" style="color:var(--red)">direct MST cost</b> — the wire needed to connect A, B, C without any helper nodes. Click <b>"Add Steiner Point"</b> to see if we can do better.',
+    '<b>Step 4 of 4:</b> Click anywhere to place the <b style="color:var(--gold)">Steiner point S</b>. Then drag it to find the best position. Notice the green wires updating live!',
+    '<b>Result:</b> The Steiner point reduces total wire length by sharing a common junction. Press <b>"↺ Restart"</b> to try with different positions.'
+  ];
+  const PHASES=['PHASE 1 — PLACE COMPONENTS','PHASE 1 — PLACE COMPONENTS','PHASE 1 — PLACE COMPONENTS','PHASE 2 — REVIEW DIRECT COST','PHASE 3 — PLACE STEINER POINT','PHASE 4 — COMPARE'];
+  const CVLBLS=['step 1 of 4 — click to place A','step 2 of 4 — click to place B','step 3 of 4 — click to place C','review direct wiring cost','step 4 — click or drag to place Steiner S','done — direct vs steiner comparison'];
+
+  function directMST(){
+    // MST of 3 points = 2 cheapest edges
+    if(pts.length<3)return 0;
+    const[A,B,C]=pts;
+    const ab=md(A,B),bc=md(B,C),ac=md(A,C);
+    const sorted=[ab,bc,ac].sort((a,b)=>a-b);
+    return sorted[0]+sorted[1];
+  }
+  function steinerTotal(){
+    if(!sPt||pts.length<3)return 0;
+    return pts.reduce((s,p)=>s+md(p,sPt),0);
+  }
+
+  function updateDots(){
+    // 4 progress dots: place A, place B, place C, add Steiner
+    const states=[
+      phase>=1?'done':'active',
+      phase>=2?'done':(phase>=1?'active':''),
+      phase>=3?'done':(phase>=2?'active':''),
+      phase>=5?'done':(phase>=4?'active':'')
+    ];
+    states.forEach((s,i)=>{$('sp'+i).className='sp'+(s?' '+s:'');});
+    $('st-phase-lbl').textContent=PHASES[Math.min(phase,5)];
+    $('st-cvl').textContent=CVLBLS[Math.min(phase,5)];
+    $('st-hint').innerHTML=HINTS[Math.min(phase,5)];
+    const btn=$('st-action-btn');
+    if(phase===3){btn.textContent='Add Steiner Point →';btn.disabled=false;btn.className='btn bg';}
+    else if(phase===5){btn.textContent='✓ Done';btn.disabled=true;btn.className='btn';}
+    else{btn.textContent='waiting…';btn.disabled=true;btn.className='btn';}
+  }
+
+  function updateStats(){
+    $('s-na').textContent=pts.length;
+    const d=directMST();
+    $('s-dir').textContent=pts.length===3?rnd(d):'—';
+    if(phase>=4&&sPt){
+      const s=steinerTotal(),sav=Math.max(0,d-s),pct=d>0?sav/d*100:0;
+      $('ct-dir').textContent=rnd(d);$('ct-st').textContent=rnd(s);
+      $('ct-sv').textContent=rnd(sav);$('ct-pct').textContent=pct.toFixed(1)+'%';
+    }
+  }
+
+  function draw(){
+    W=cv.offsetWidth;cv.width=W;BG(ctx,W,H_);
+    // draw direct MST lines (always visible once 3 pts placed, faded in steiner phase)
+    if(pts.length===3){
+      const[A,B,C]=pts;const ab=md(A,B),bc=md(B,C),ac=md(A,C);
+      let pairs=[];
+      const sorted=[{d:ab,a:0,b:1},{d:bc,a:1,b:2},{d:ac,a:0,b:2}].sort((x,y)=>x.d-y.d);
+      pairs=[sorted[0],sorted[1]]; // MST edges
+      ctx.strokeStyle=phase>=4?'rgba(239,68,68,0.25)':'rgba(239,68,68,0.8)';
+      ctx.lineWidth=phase>=4?1.5:2.5;
+      ctx.setLineDash(phase>=4?[5,5]:[]);
+      pairs.forEach(e=>{
+        ctx.beginPath();ctx.moveTo(pts[e.a].x,pts[e.a].y);ctx.lineTo(pts[e.b].x,pts[e.b].y);ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      // show direct length labels only in phase 3
+      if(phase===3){
+        pairs.forEach(e=>{
+          const mx=(pts[e.a].x+pts[e.b].x)/2,my=(pts[e.a].y+pts[e.b].y)/2;
+          ctx.fillStyle='rgba(0,0,0,0.7)';ctx.beginPath();ctx.arc(mx,my,14,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle='#ef4444';ctx.font="10px 'Space Mono',monospace";ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(rnd(e.d),mx,my);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+        });
+        // total label
+        const total=directMST();
+        ctx.fillStyle='rgba(239,68,68,0.15)';ctx.beginPath();ctx.roundRect?ctx.roundRect(W/2-80,H_-46,160,30,6):ctx.rect(W/2-80,H_-46,160,30);ctx.fill();
+        ctx.strokeStyle='rgba(239,68,68,0.4)';ctx.lineWidth=1;ctx.stroke();
+        ctx.fillStyle='#ef4444';ctx.font="bold 12px 'Space Mono',monospace";ctx.textAlign='center';
+        ctx.fillText('DIRECT = '+rnd(total),W/2,H_-27);ctx.textAlign='left';
+      }
+    }
+    // draw Steiner wires
+    if(sPt&&pts.length===3){
+      pts.forEach(p=>{
+        ctx.strokeStyle='#10b981';ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(sPt.x,sPt.y);ctx.stroke();
+        const mx=(p.x+sPt.x)/2,my=(p.y+sPt.y)/2;
+        ctx.fillStyle='rgba(0,0,0,0.7)';ctx.beginPath();ctx.arc(mx,my,14,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#10b981';ctx.font="10px 'Space Mono',monospace";ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(rnd(md(p,sPt)),mx,my);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      });
+      // saving badge
+      const d=directMST(),s=steinerTotal(),sav=Math.max(0,d-s),pct=d>0?sav/d*100:0;
+      const badge='SAVED: '+rnd(sav)+' ('+pct.toFixed(1)+'%)';
+      ctx.fillStyle='rgba(16,185,129,0.15)';ctx.beginPath();ctx.roundRect?ctx.roundRect(W/2-90,H_-46,180,30,6):ctx.rect(W/2-90,H_-46,180,30);ctx.fill();
+      ctx.strokeStyle='rgba(16,185,129,0.4)';ctx.lineWidth=1;ctx.stroke();
+      ctx.fillStyle='#10b981';ctx.font="bold 11px 'Space Mono',monospace";ctx.textAlign='center';
+      ctx.fillText(badge,W/2,H_-27);ctx.textAlign='left';
+      node(ctx,sPt.x,sPt.y,'S','#f59e0b',13);
+    }
+    pts.forEach((p,i)=>node(ctx,p.x,p.y,LABELS[i],'#2563eb'));
+    updateStats();updateDots();
+  }
+
+  // interactions
+  cv.addEventListener('click',e=>{
+    if(demoTimer)return;
+    const p=evPt(cv,e);
+    if(phase<3){pts.push(p);phase++;draw();return;}
+    if(phase===4){sPt=p;draw();return;}
+  });
+  cv.addEventListener('mousedown',e=>{
+    if(phase<4)return;
+    const p=evPt(cv,e);
+    if(sPt&&Math.hypot(p.x-sPt.x,p.y-sPt.y)<22){dragging=true;cv.style.cursor='grabbing';}
+  });
+  cv.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const p=evPt(cv,e);sPt={x:clamp(p.x,10,W-10),y:clamp(p.y,10,H_-10)};
+    draw();
+  });
+  cv.addEventListener('mouseup',()=>{
+    if(dragging&&phase===4){phase=5;$('st-after-wrap').style.display='block';}
+    dragging=false;cv.style.cursor='crosshair';draw();
+  });
+  cv.addEventListener('mouseleave',()=>{dragging=false;});
+  cv.addEventListener('touchstart',e=>{
+    if(phase<4)return;const p=tPt(cv,e);
+    if(sPt&&Math.hypot(p.x-sPt.x,p.y-sPt.y)<26){dragging=true;e.preventDefault();}
+  },{passive:false});
+  cv.addEventListener('touchmove',e=>{
+    if(!dragging)return;e.preventDefault();
+    const p=tPt(cv,e);sPt={x:clamp(p.x,10,W-10),y:clamp(p.y,10,H_-10)};draw();
+  },{passive:false});
+  cv.addEventListener('touchend',()=>{
+    if(dragging&&phase===4){phase=5;$('st-after-wrap').style.display='block';}
+    dragging=false;draw();
+  });
+
+  function snapOptimal(){
+    if(pts.length<3)return;
+    let best=sPt?{...sPt}:{x:W/2,y:H_/2};let bestV=1e9;
+    const tmpPt={...best};
+    const tmp2=sPt;sPt=tmpPt;bestV=steinerTotal();sPt=tmp2;
+    for(let i=0;i<3000;i++){
+      const np={x:best.x+(Math.random()-.5)*18,y:best.y+(Math.random()-.5)*18};
+      np.x=clamp(np.x,10,W-10);np.y=clamp(np.y,10,H_-10);
+      const t2=sPt;sPt=np;const v=steinerTotal();
+      if(v<bestV){bestV=v;best={...np};}else sPt=t2;
+    }
+    sPt=best;phase=5;$('st-after-wrap').style.display='block';draw();
+  }
+
+  function restart(){
+    clearTimeout(demoTimer);demoTimer=null;
+    phase=0;pts=[];sPt=null;dragging=false;
+    $('st-after-wrap').style.display='none';
+    draw();
+  }
+
+  function autoDemo(){
+    restart();
+    const dps=[
+      ()=>{pts.push({x:.2*W,y:.72*H_});phase=1;draw();},
+      ()=>{pts.push({x:.8*W,y:.68*H_});phase=2;draw();},
+      ()=>{pts.push({x:.5*W,y:.15*H_});phase=3;draw();},
+      ()=>{phase=4;sPt={x:W*.5,y:H_*.58};draw();},
+      ()=>{snapOptimal();}
+    ];
+    let i=0;
+    function step(){dps[i]();i++;if(i<dps.length)demoTimer=setTimeout(step,900);}
+    demoTimer=setTimeout(step,400);
+  }
+
+  draw();
+  return{
+    draw,restart,autoDemo,
+    action(){
+      if(phase===3){phase=4;$('st-after-wrap').style.display='block';draw();}
+      else if(phase===4&&sPt)snapOptimal();
+    }
+  };
+})();
+
+// ══════════════════════════════════════
+// SIM 3 — KRUSKAL
+// ══════════════════════════════════════
+const K=(()=>{
+  let{cv,ctx,W,H:H_}=initCanvas('cv2');
+  let ns=[],edges=[],step=0,mst=[],rej=[],uf=[],autoT=null;
+  function mkGraph(){
+    W=cv.offsetWidth;cv.width=W;
+    ns=[];for(let i=0;i<8;i++)ns.push({x:48+Math.random()*(W-96),y:38+Math.random()*(H_-76)});
+    edges=[];for(let i=0;i<ns.length;i++)for(let j=i+1;j<ns.length;j++)edges.push({a:i,b:j,d:md(ns[i],ns[j])});
+    edges.sort((a,b)=>a.d-b.d);
+    step=0;mst=[];rej=[];uf=ns.map((_,i)=>i);
+    $('k-log').innerHTML='<div class="le">Press "Next step" to begin</div>';
+    $('k-step').textContent=0;$('k-add').textContent=0;$('k-rej').textContent=0;$('k-len').textContent='—';$('k-tot').textContent=edges.length;
+  }
+  function find(i){if(uf[i]!==i)uf[i]=find(uf[i]);return uf[i];}
+  function unite(i,j){uf[find(i)]=find(j);}
+  function draw(){
+    W=cv.offsetWidth;cv.width=W;BG(ctx,W,H_);
+    edges.forEach((e,i)=>{
+      if(i>=step)return;const ok=mst.includes(i);
+      ctx.globalAlpha=ok?1:0.27;ctx.strokeStyle=ok?'#10b981':'#ef4444';ctx.lineWidth=ok?2.5:1.5;
+      ctx.beginPath();ctx.moveTo(ns[e.a].x,ns[e.a].y);ctx.lineTo(ns[e.b].x,ns[e.b].y);ctx.stroke();ctx.globalAlpha=1;
+      if(ok){const mx=(ns[e.a].x+ns[e.b].x)/2,my=(ns[e.a].y+ns[e.b].y)/2;
+        ctx.fillStyle='rgba(0,0,0,0.7)';ctx.beginPath();ctx.arc(mx,my,13,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#10b981';ctx.font="10px 'Space Mono',monospace";ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(rnd(e.d),mx,my);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+    });
+    if(step<edges.length){const e=edges[step];ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(ns[e.a].x,ns[e.a].y);ctx.lineTo(ns[e.b].x,ns[e.b].y);ctx.stroke();ctx.setLineDash([]);}
+    ns.forEach((n,i)=>node(ctx,n.x,n.y,String.fromCharCode(65+i),'#2563eb'));
+  }
+  function next(){
+    if(step>=edges.length)return;
+    const e=edges[step],log=$('k-log');
+    const fa=find(e.a),fb=find(e.b),ok=fa!==fb;
+    if(ok){mst.push(step);unite(e.a,e.b);}else rej.push(step);
+    const la=String.fromCharCode(65+e.a),lb=String.fromCharCode(65+e.b);
+    const d=document.createElement('div');d.className='le '+(ok?'ok':'no');
+    d.textContent=ok?`✓ Added   ${la}–${lb}  (${rnd(e.d)})`:`✗ Rejected ${la}–${lb}  (${rnd(e.d)}) — loop`;
+    log.appendChild(d);log.scrollTop=log.scrollHeight;
+    step++;$('k-step').textContent=step;$('k-add').textContent=mst.length;$('k-rej').textContent=rej.length;
+    $('k-len').textContent=mst.length?rnd(mst.reduce((s,i)=>s+edges[i].d,0)):'—';draw();
+    if(mst.length===ns.length-1){clearInterval(autoT);autoT=null;$('kr-ab').textContent='Auto play';
+      const f=document.createElement('div');f.className='le ok';f.textContent='✓ MST complete — all '+ns.length+' nodes connected!';log.appendChild(f);log.scrollTop=log.scrollHeight;}
+  }
+  function auto(){
+    if(autoT){clearInterval(autoT);autoT=null;$('kr-ab').textContent='Auto play';return;}
+    $('kr-ab').textContent='⏸ Pause';
+    autoT=setInterval(()=>{if(step>=edges.length||mst.length===ns.length-1){clearInterval(autoT);autoT=null;$('kr-ab').textContent='Auto play';return;}next();},520);
+  }
+  function reset(){clearInterval(autoT);autoT=null;$('kr-ab').textContent='Auto play';mkGraph();draw();}
+  mkGraph();draw();
+  return{draw,next,auto,reset};
+})();
+
+// ══════════════════════════════════════
+// SIM 4 — SIMULATED ANNEALING
+// ══════════════════════════════════════
+const SA=(()=>{
+  const COLS=8,ROWS=6;
+  let{cv,ctx,W,H:H_}=initCanvas('cv3');
+  let comps=[],wires=[],T=100,iter=0,running=false,timer=null,alpha=0.992;
+  const cw=()=>cv.width/COLS,ch=()=>H_/ROWS;
+  function init(){
+    W=cv.offsetWidth;cv.width=W;T=100;iter=0;comps=[];
+    for(let i=0;i<14;i++)comps.push({x:W/2+(Math.random()-.5)*60,y:H_/2+(Math.random()-.5)*60,w:26,h:17});
+    wires=[];for(let i=0;i<10;i++){let a=Math.floor(Math.random()*comps.length),b;do{b=Math.floor(Math.random()*comps.length);}while(b===a);wires.push([a,b]);}
+    upd();draw();
+  }
+  function wireLen(){return wires.reduce((s,[a,b])=>s+md(comps[a],comps[b]),0);}
+  function density(){
+    const g=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+    comps.forEach(c=>{const ci=clamp(Math.floor(c.x/cw()),0,COLS-1),ri=clamp(Math.floor(c.y/ch()),0,ROWS-1);g[ri][ci]++;});return g;
+  }
+  function upd(){
+    $('sa-t').textContent=T.toFixed(1);$('sa-i').textContent=iter;$('sa-w').textContent=rnd(wireLen());
+    $('sa-p').textContent=T>0.5?(Math.exp(-20/T)*100).toFixed(2)+'%':'~0%';
+    $('sa-tl').textContent='T = '+T.toFixed(2);
+    const tR=T/100,r2=rnd(239*tR+37*(1-tR)),g2=rnd(68*tR+99*(1-tR)),b2=rnd(68*tR+235*(1-tR));
+    $('sa-bar').style.width=Math.max(0,tR*100)+'%';$('sa-bar').style.background=`rgb(${r2},${g2},${b2})`;
+  }
+  function draw(){
+    W=cv.offsetWidth;cv.width=W;BG(ctx,W,H_);
+    const g=density();
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      if(g[r][c]>2)ctx.fillStyle='rgba(239,68,68,0.3)';else if(g[r][c]>0)ctx.fillStyle='rgba(37,99,235,0.16)';else ctx.fillStyle='transparent';
+      ctx.fillRect(c*cw(),r*ch(),cw(),ch());
+      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.5;ctx.strokeRect(c*cw(),r*ch(),cw(),ch());
+    }
+    wires.forEach(([a,b])=>{ctx.strokeStyle='rgba(16,185,129,0.38)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(comps[a].x,comps[a].y);ctx.lineTo(comps[b].x,comps[b].y);ctx.stroke();});
+    comps.forEach((c,i)=>{
+      ctx.fillStyle='#1a3060';ctx.strokeStyle='#3b82f6';ctx.lineWidth=1;
+      ctx.beginPath();if(ctx.roundRect)ctx.roundRect(c.x-c.w/2,c.y-c.h/2,c.w,c.h,3);else ctx.rect(c.x-c.w/2,c.y-c.h/2,c.w,c.h);
+      ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.8)';ctx.font="8px 'Space Mono',monospace";ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(i+1,c.x,c.y);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    });
+  }
+  function step(){
+    const oldW=wireLen();const i=Math.floor(Math.random()*comps.length);
+    const range=Math.max(6,T*2.2);const ox=comps[i].x,oy=comps[i].y;
+    comps[i].x=clamp(ox+(Math.random()-.5)*range,14,W-14);
+    comps[i].y=clamp(oy+(Math.random()-.5)*range,10,H_-10);
+    const df=wireLen()-oldW;
+    if(!(df<0||Math.random()<Math.exp(-df/Math.max(0.01,T)))){comps[i].x=ox;comps[i].y=oy;}
+    T*=alpha;iter++;upd();draw();
+    if(T<0.3){clearInterval(timer);timer=null;running=false;$('sa-btn').textContent='▶ Start annealing';}
+  }
+  init();
+  return{
+    draw,
+    toggle(){if(running){clearInterval(timer);timer=null;running=false;$('sa-btn').textContent='▶ Resume';return;}if(T<0.3){init();return;}running=true;$('sa-btn').textContent='⏸ Pause';timer=setInterval(step,25);},
+    reset(){clearInterval(timer);timer=null;running=false;init();},
+    setA(){const v=parseInt($('sa-sl').value);alpha=v/1000;$('sa-av').textContent=(v/1000).toFixed(3);}
+  };
+})();
+
+// ══════════════════════════════════════
+// SIM 5 — HEATMAP
+// ══════════════════════════════════════
+const HM=(()=>{
+  const COLS=9,ROWS=7;let{cv,ctx,W,H:H_}=initCanvas('cv4');
+  let groups=[],cur=[];const cw=()=>cv.width/COLS,ch=()=>H_/ROWS;
+  function calcGrid(){
+    const g=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+    groups.forEach(grp=>{
+      if(grp.length<2)return;
+      const xs=grp.map(p=>p.x),ys=grp.map(p=>p.y);
+      const bx0=Math.min(...xs),bx1=Math.max(...xs),by0=Math.min(...ys),by1=Math.max(...ys);
+      const wl=grp.reduce((s,p,i)=>i===0?s:s+md(p,grp[i-1]),0);
+      const ba=Math.max(1,(bx1-bx0)*(by1-by0));const gRho=wl*3/ba;
+      for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+        const cx=c*cw(),cy=r*ch();
+        const ox=Math.max(0,Math.min(bx1,cx+cw())-Math.max(bx0,cx));
+        const oy=Math.max(0,Math.min(by1,cy+ch())-Math.max(by0,cy));
+        if(ox>0&&oy>0)g[r][c]+=gRho*(ox*oy)/(cw()*ch());
+      }
+    });return g;
+  }
+  function hCol(t){
+    if(t<0.01)return'rgba(11,22,41,0.6)';
+    if(t<0.25)return`rgba(27,58,107,${0.18+t*1.8})`;
+    if(t<0.55)return`rgba(37,99,235,${0.3+t*0.7})`;
+    if(t<0.82)return`rgba(245,158,11,${0.45+t*0.55})`;
+    return`rgba(239,68,68,${0.55+t*0.45})`;
+  }
+  function draw(){
+    W=cv.offsetWidth;cv.width=W;BG(ctx,W,H_);
+    const g=calcGrid(),flat=g.flat(),maxV=Math.max(...flat,0.001);
+    let hc='—',hv=0;
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      const t=g[r][c]/maxV;ctx.fillStyle=hCol(t);ctx.fillRect(c*cw(),r*ch(),cw(),ch());
+      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.5;ctx.strokeRect(c*cw(),r*ch(),cw(),ch());
+      if(t>0.08){ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font="9px 'Space Mono',monospace";ctx.textAlign='center';ctx.fillText(g[r][c].toFixed(2),c*cw()+cw()/2,r*ch()+ch()/2+4);ctx.textAlign='left';}
+      if(g[r][c]>hv){hv=g[r][c];hc=`[${r+1},${c+1}]`;}
+    }
+    groups.forEach(grp=>{
+      if(grp.length<2)return;
+      ctx.strokeStyle='rgba(245,158,11,0.55)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(grp[0].x,grp[0].y);grp.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);
+      grp.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#f59e0b';ctx.fill();});
+    });
+    const avg=flat.reduce((s,v)=>s+v,0)/flat.length;
+    $('hm-g').textContent=groups.length;$('hm-mx').textContent=maxV>0.001?maxV.toFixed(3):'—';$('hm-av').textContent=avg>0?avg.toFixed(3):'—';$('hm-hc').textContent=hc;
+  }
+  cv.addEventListener('click',e=>{
+    cur.push(evPt(cv,e));if(cur.length>=2+Math.floor(Math.random()*2)){groups.push([...cur]);cur=[];}draw();
+  });
+  function mkGroups(fn){groups=[];for(let i=0;i<15;i++){const{cx,cy}=fn(i);const pts=[{x:cx,y:cy}];for(let j=0;j<2+Math.floor(Math.random()*2);j++)pts.push({x:cx+(Math.random()-.5)*110,y:cy+(Math.random()-.5)*80});groups.push(pts);}draw();}
+  draw();
+  return{
+    draw,clear(){groups=[];cur=[];draw();},
+    random(){mkGroups(()=>({cx:55+Math.random()*(W-110),cy:38+Math.random()*(H_-76)}));},
+    center(){mkGroups(i=>({cx:W/2+(Math.random()-.5)*(i<9?80:W*.7),cy:H_/2+(Math.random()-.5)*(i<9?65:H_*.6)}));}
+  };
+})();
+
+window.addEventListener('resize',()=>[H,ST,K,SA,HM].forEach(m=>m?.draw?.()));
+window.addEventListener('load',()=>setTimeout(()=>{H.demo();HM.center();},120));
+</script>
+</body>
+</html>
